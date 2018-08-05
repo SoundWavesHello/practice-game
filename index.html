@@ -1,0 +1,197 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>I wanted to try making a video game</title>
+
+	    <style>
+	    	* { padding: 0; margin: 0; }
+	    	canvas { background: #eee; display: block; margin: 0 auto; }
+    	</style>	
+	</head>
+
+	<body>
+		<canvas id="myCanvas" width="480" height="320"></canvas>
+
+
+		<script>
+			var canvas = document.getElementById("myCanvas");
+			var context = canvas.getContext("2d");
+
+			var x = canvas.width / 2;
+			var y = canvas.height / 2;
+			var dx = -2;
+			var dy = 2;
+			var ball_radius = 10;
+
+
+			var paddle_height = 10;
+			var paddle_width = 75;
+			var paddle_x = (canvas.width - paddle_width)/2;
+			var leftPressed = false;
+			var rightPressed = false;
+
+			document.addEventListener("keydown", keyDownHandler, false);
+			document.addEventListener("keyup", keyUpHandler, false);
+
+			var brick_row_count = 3;
+			var brick_column_count = 5;
+			var brick_width = 75;
+			var brick_height = 20;
+			var brick_padding = 10;
+			var brick_offset_top = 30;
+			var brick_offset_left = 30;
+			var score = 0;
+
+			var bricks = [];
+			for(var c=0; c<brick_column_count; c++) {
+			    bricks[c] = [];
+			    for(var r=0; r<brick_row_count; r++) {
+			        bricks[c][r] = { x: 0, y: 0, status: 1};
+			    }
+			}
+
+			function keyDownHandler(e){
+				if (e.keyCode == 39){
+					rightPressed = true;
+				}
+				else if (e.keyCode == 37){
+					leftPressed = true;
+				}
+			}
+
+			function keyUpHandler(e){
+				if (e.keyCode == 39){
+					rightPressed = false;
+				}
+				else if (e.keyCode == 37){
+					leftPressed = false;
+				}
+			}
+
+			function detect_collision() {
+				for(var c=0; c<brick_column_count; c++){
+					for(var r=0; r<brick_row_count; r++){
+            			var b = bricks[c][r];
+        				if(b.status==1 && x > b.x-ball_radius && x < b.x+brick_width+ball_radius && y > b.y-ball_radius && y < b.y+brick_height+ball_radius) {
+                			dy = -dy;
+                			b.status = 0;	
+                			score++;
+
+                			if (score==brick_column_count * brick_row_count){
+                				alert('CONGRATS!  YOU WON BECAUSE YOU ARE THE GOAT')
+                				document.location.reload();
+                			}					
+						}
+					}
+				}
+			}
+
+			function draw_score(){
+				context.font = '16px Arial';
+				context.fillText('Score: ' + score, 8, 20);
+			}
+
+			function draw_many_bricks() {
+			    for(var c=0; c<brick_column_count; c++) {
+			        for(var r=0; r<brick_row_count; r++) {
+			        	if (bricks[c][r].status == 1){
+			            	draw_brick(c, r);
+			        	}
+			        }
+			    }
+			}
+
+			function draw_brick(c, r) {
+				var brick_x = (c*(brick_width+brick_padding))+brick_offset_left;
+				var brick_y = (r*(brick_height+brick_padding))+brick_offset_top;
+				bricks[c][r].x = brick_x;
+				bricks[c][r].y = brick_y;
+				context.beginPath();
+				context.rect(brick_x, brick_y, brick_width, brick_height);
+				context.fillStyle = "#0095DD";
+				context.fill();
+				context.closePath();
+			}
+
+			function draw_paddle(){
+				context.beginPath();
+				context.rect(paddle_x, canvas.height - paddle_height, paddle_width, paddle_height);
+				context.fillStyle='red';
+				context.fill();
+				context.closePath();
+			}
+
+
+			function draw_ball(){
+				context.beginPath();
+				context.arc(x, y, ball_radius, 0, Math.PI*2);
+				context.fillStyle = 'green';
+				context.fill();
+				context.closePath();				
+			}
+
+			function draw() {
+
+				context.clearRect(0, 0, canvas.width, canvas.height)
+
+				draw_ball();
+				draw_paddle();
+				draw_many_bricks();
+				detect_collision();
+				draw_score();
+
+				if (y + dy < 0 + ball_radius){
+					dy = -dy;
+				}
+
+				else if (y + dy > canvas.height - ball_radius){
+					
+					if (x > paddle_x && x < paddle_x + paddle_width){
+						dy = -dy;
+					}
+
+					else if (x > paddle_x - ball_radius && x < paddle_x + paddle_width){
+						dy = -dy;
+						if (dx > 0){
+							dx = -dx;
+						}
+					}
+
+					else if (x > paddle_x && x < paddle_x + paddle_width + ball_radius){
+						dy = -dy;
+						if (dx < 0){
+							dx = -dx;
+						}
+					}
+
+					else{
+						alert("GAME OVER");
+						x = canvas.width/2;
+						y = canvas.height/2;
+						document.location.reload(true);
+					}
+				}
+
+				if (x + dx < 0 + ball_radius || x + dx > canvas.width - ball_radius){
+					dx = -dx;
+				}
+
+				if (leftPressed == true && paddle_x > 0){
+					paddle_x -= 7;
+				}
+				else if (rightPressed == true && paddle_x < canvas.width - paddle_width){
+					paddle_x += 7;
+				}
+
+				x += dx;
+				y += dy;
+			}
+
+
+			setInterval(draw, 10);
+
+
+		</script>
+	</body>
+
+</html>
